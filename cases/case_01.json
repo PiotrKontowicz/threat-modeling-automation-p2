@@ -1,0 +1,206 @@
+{
+  "schema_version": "p2-system-v1",
+  "system": {
+    "id": "case_01",
+    "name": "Minimal Web Application Supply Chain",
+    "description": "Mały, kontrolowany przypadek software supply chain dla aplikacji webowej. Deweloper publikuje kod do prywatnego repozytorium Git. Zarządzany, efemeryczny runner CI pobiera kod oraz jedną zależność z publicznego rejestru pakietów, buduje artefakt i publikuje go do prywatnego rejestru artefaktów. Artefakt jest następnie wdrażany do zarządzanego środowiska produkcyjnego."
+  },
+  "components": [
+    {
+      "id": "developer",
+      "name": "Developer",
+      "type": "developer",
+      "description": "Deweloper utrzymujący kod aplikacji i publikujący zmiany do prywatnego repozytorium źródłowego.",
+      "ownership": "internal",
+      "exposure": "not_networked",
+      "environment": "development"
+    },
+    {
+      "id": "source_repository",
+      "name": "Private Source Repository",
+      "type": "source_repository",
+      "description": "Prywatne repozytorium Git przechowujące kod źródłowy aplikacji i konfigurację procesu CI.",
+      "ownership": "third_party",
+      "exposure": "internet_facing",
+      "environment": "shared"
+    },
+    {
+      "id": "ci_runner",
+      "name": "Ephemeral CI Runner",
+      "type": "ci_runner",
+      "description": "Zarządzany, efemeryczny runner uruchamiany dla pojedynczego pipeline'u; pobiera kod i zależność, wykonuje build i publikuje artefakt.",
+      "ownership": "third_party",
+      "exposure": "restricted",
+      "environment": "shared"
+    },
+    {
+      "id": "package_registry",
+      "name": "Public Package Registry",
+      "type": "package_registry",
+      "description": "Zewnętrzny publiczny rejestr pakietów dostarczający jedną zależność używaną podczas builda.",
+      "ownership": "external",
+      "exposure": "internet_facing",
+      "environment": "shared"
+    },
+    {
+      "id": "artifact_registry",
+      "name": "Private Artifact Registry",
+      "type": "artifact_registry",
+      "description": "Prywatny, zarządzany rejestr przechowujący artefakt utworzony przez pipeline CI.",
+      "ownership": "third_party",
+      "exposure": "restricted",
+      "environment": "shared"
+    },
+    {
+      "id": "production_runtime",
+      "name": "Production Runtime",
+      "type": "production_runtime",
+      "description": "Zarządzane środowisko uruchomieniowe aplikacji wykorzystujące artefakt pobrany z prywatnego rejestru artefaktów.",
+      "ownership": "third_party",
+      "exposure": "internet_facing",
+      "environment": "production"
+    }
+  ],
+  "assets": [
+    {
+      "id": "source_code",
+      "name": "Source Code",
+      "type": "code"
+    },
+    {
+      "id": "external_dependency",
+      "name": "External Dependency",
+      "type": "dependency"
+    },
+    {
+      "id": "built_artifact",
+      "name": "Built Artifact",
+      "type": "artifact"
+    },
+    {
+      "id": "ci_credentials",
+      "name": "CI Publishing Credential",
+      "type": "credential"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel_dev_repo",
+      "source": "developer",
+      "target": "source_repository",
+      "type": "pushes_to"
+    },
+    {
+      "id": "rel_repo_ci",
+      "source": "source_repository",
+      "target": "ci_runner",
+      "type": "triggers"
+    },
+    {
+      "id": "rel_registry_ci",
+      "source": "package_registry",
+      "target": "ci_runner",
+      "type": "provides_dependencies"
+    },
+    {
+      "id": "rel_ci_artifact",
+      "source": "ci_runner",
+      "target": "artifact_registry",
+      "type": "publishes_to"
+    },
+    {
+      "id": "rel_artifact_prod",
+      "source": "artifact_registry",
+      "target": "production_runtime",
+      "type": "deploys_to"
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow_source_push",
+      "source": "developer",
+      "target": "source_repository",
+      "assets": [
+        "source_code"
+      ],
+      "type": "data_flow"
+    },
+    {
+      "id": "flow_source_checkout",
+      "source": "source_repository",
+      "target": "ci_runner",
+      "assets": [
+        "source_code"
+      ],
+      "type": "data_flow"
+    },
+    {
+      "id": "flow_dependency_download",
+      "source": "package_registry",
+      "target": "ci_runner",
+      "assets": [
+        "external_dependency"
+      ],
+      "type": "data_flow"
+    },
+    {
+      "id": "flow_registry_auth",
+      "source": "ci_runner",
+      "target": "artifact_registry",
+      "assets": [
+        "ci_credentials"
+      ],
+      "type": "data_flow"
+    },
+    {
+      "id": "flow_artifact_publish",
+      "source": "ci_runner",
+      "target": "artifact_registry",
+      "assets": [
+        "built_artifact"
+      ],
+      "type": "data_flow"
+    },
+    {
+      "id": "flow_artifact_deployment",
+      "source": "artifact_registry",
+      "target": "production_runtime",
+      "assets": [
+        "built_artifact"
+      ],
+      "type": "data_flow"
+    }
+  ],
+  "trust_boundaries": [
+    {
+      "id": "tb_developer",
+      "name": "Developer Environment",
+      "components": [
+        "developer"
+      ]
+    },
+    {
+      "id": "tb_delivery",
+      "name": "Managed CI/CD Environment",
+      "components": [
+        "source_repository",
+        "ci_runner",
+        "artifact_registry"
+      ]
+    },
+    {
+      "id": "tb_external",
+      "name": "External Package Ecosystem",
+      "components": [
+        "package_registry"
+      ]
+    },
+    {
+      "id": "tb_production",
+      "name": "Production Environment",
+      "components": [
+        "production_runtime"
+      ]
+    }
+  ]
+}
