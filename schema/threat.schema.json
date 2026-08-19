@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Threat Model Output",
+  "description": "Schemat wyniku generowanego przez model LLM w procesie półautomatycznego modelowania zagrożeń.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "threats"
+  ],
+  "properties": {
+    "threats": {
+      "type": "array",
+      "description": "Lista zagrożeń wygenerowanych dla analizowanej reprezentacji systemu.",
+      "items": {
+        "$ref": "#/$defs/threat"
+      }
+    }
+  },
+  "$defs": {
+    "threat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "affected_elements",
+        "rationale",
+        "impact"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unikalny identyfikator zagrożenia w obrębie wyniku."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Krótka i jednoznaczna nazwa zagrożenia."
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Opis konkretnego scenariusza zagrożenia."
+        },
+        "affected_elements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Identyfikatory elementów reprezentacji systemu związanych z zagrożeniem.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Krótkie uzasadnienie wyjaśniające, dlaczego zagrożenie wynika ze wskazanych elementów reprezentacji systemu."
+        },
+        "impact": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Opis potencjalnych konsekwencji realizacji zagrożenia."
+        },
+        "preconditions": {
+          "type": "array",
+          "uniqueItems": true,
+          "description": "Opcjonalna lista warunków wstępnych wymaganych do realizacji zagrożenia.",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "category": {
+          "type": "string",
+          "description": "Opcjonalna klasyfikacja zagrożenia zgodna z STRIDE.",
+          "enum": [
+            "spoofing",
+            "tampering",
+            "repudiation",
+            "information_disclosure",
+            "denial_of_service",
+            "elevation_of_privilege",
+            "unclassified"
+          ]
+        }
+      }
+    }
+  }
+}
